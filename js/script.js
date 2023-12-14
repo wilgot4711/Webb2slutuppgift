@@ -1,8 +1,8 @@
 // Funktionen för att hämta stad och väderinformation
 async function getWeatherAndCityInfo() {
   //api nycklar.
-  const apiKeyCity = 'M4FRwNJOkIqImXwA6tzUtQ==oToiRz62PDnPxKCg';
-  const apiKeyWeather = 'ce3291dda00848fda2e93132230612';
+  const apiKeystad = 'M4FRwNJOkIqImXwA6tzUtQ==oToiRz62PDnPxKCg';
+  const apiKeyväder = 'ce3291dda00848fda2e93132230612';
 
   // Fråga användaren efter stad
   const city = prompt('Var god ange din stads namn');
@@ -19,7 +19,7 @@ async function getWeatherAndCityInfo() {
     const cityResponse = await fetch(cityApiUrl, {
       method: 'GET',
       headers: {
-        'X-Api-Key': apiKeyCity,
+        'X-Api-Key': apiKeystad,
         'Content-Type': 'application/json',
       },
     });
@@ -45,13 +45,16 @@ async function getWeatherAndCityInfo() {
   }
 
   try {
-    const weatherResponse = await fetch(`https://api.weatherapi.com/v1/forecast.json?key=${apiKeyWeather}&q=${city}&days=3`);
+    const weatherResponse = await fetch(`https://api.weatherapi.com/v1/forecast.json?key=${apiKeyväder}&q=${city}&days=3`);
     const weatherData = await weatherResponse.json();
 
     // Kontrollera om APIn fungerade
     if (weatherResponse.ok) {
       // Visa aktuella väderförhållanden
-      document.getElementById('currentWeather1').innerText = `Temperatur: ${weatherData.current.temp_c}°C`;
+      // Visa aktuella väderförhållanden
+  const currentTemperature = Math.round(weatherData.current.temp_c);
+  document.getElementById('currentWeather1').innerText = `Temperatur: ${currentTemperature}°C`;
+
       
       // Skriva ut vädertillståndet på svenska istället för engelska.
       const translatedCondition = translateWeatherCondition(weatherData.current.condition.text);
@@ -61,21 +64,23 @@ async function getWeatherAndCityInfo() {
       document.getElementById('currentWeather4').innerText = `Risk för snö: ${weatherData.current.snow_mm > 0 ? 'Ja' : 'Nej'}`;
 
       // daglig prognos
-      document.getElementById('forecast1').innerText = 'Daglig Prognos:';
-      weatherData.forecast.forecastday.forEach((day, index) => {
-        if (index < 3) {
-          // Konvertera datumet till dagens namn och datum.
-          const date = new Date(day.date);
-          const dayName = date.toLocaleDateString('sv-SE', { weekday: 'long' });
-          const formattedDate = date.toLocaleDateString('sv-SE', { day: 'numeric', month: 'long' });
+document.getElementById('forecast1').innerText = 'Daglig Prognos:';
+weatherData.forecast.forecastday.forEach((day, index) => {
+  if (index < 3) {
+    // Konvertera datumet till dagens namn och datum.
+    const date = new Date(day.date);
+    const dayName = date.toLocaleDateString('sv-SE', { weekday: 'long' });
+    const formattedDate = date.toLocaleDateString('sv-SE', { day: 'numeric', month: 'long' });
 
-          const maxTemp = day.day.maxtemp_c;
-          const minTemp = day.day.mintemp_c;
-          const condition = translateWeatherCondition(day.day.condition.text);
+    // Använd Math.round() för att avrunda temperaturvärdena till närmaste heltal
+    const maxTemp = Math.round(day.day.maxtemp_c);
+    const minTemp = Math.round(day.day.mintemp_c);
+    const condition = translateWeatherCondition(day.day.condition.text);
 
-          document.getElementById(`forecast${index + 2}`).innerText = `${dayName} ${formattedDate}:\nMax Temp: ${maxTemp}°C, Min Temp: ${minTemp}°C, Förhållande: ${condition}`;
-        }
-      });
+    document.getElementById(`forecast${index + 2}`).innerText = `${dayName} ${formattedDate}:\nMax Temp: ${maxTemp}°C, Min Temp: ${minTemp}°C, Förhållande: ${condition}`;
+  }
+});
+
     } else {
       console.error('Fel vid hämtning av väderdata:', weatherData.error.message);
     }
